@@ -1,5 +1,6 @@
 import { getFirestore, collection, query, where, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-storage.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.js";
 import { verAutenticacion } from "./conexion-firebase.js";
 
 const database = getFirestore();
@@ -30,11 +31,10 @@ async function cargarRestaurantes() {
     contenido+="<hr>";
     contenido+="<div style='text-align:center;'>";
     contenido+="<a class='btn btn-warning' href='"+ fila.menu + "' target='_blank'><i class='fa fa-eye'></i>Abrir menú</a>"
-    contenido+="<button type='button' class='btn btn-info' onclick='verComentarios(\""+rpta.id+"\")'><i class='fa fa-comments'></i> Ver comentarios</button>"
+    contenido+="<button type='button'  class='btn btn-info' data-toggle='modal' data-target='#commentModal' onclick='abrirModalComentario(\""+rpta.id+"\",\""+fila.nombre+"\")'><i class='fa fa-comments'></i> Calificar/Comentar</button>"
     contenido+="</div>"
     contenido+="<hr>";
     contenido+="<div style='text-align:end;'>";
-    contenido+="<button type='button'  class='btn btn-primary' data-toggle='modal' data-target='#commentModal' onclick='abrirModalComentario(\""+ fila.nombre +"\", \""+rpta.id+"\")'><i class='fa fa-comment'></i></button>"
     contenido+="<button type='button'  class='btn btn-success' onclick='abrirModal(\""+rpta.id+"\")' data-toggle='modal' data-target='#exampleModal'><i class='fa fa-edit'></i></button>"
     contenido+="<button type='button'  class='btn btn-danger'  onclick='eliminar(\""+rpta.id+"\")' ><i class='fa fa-trash'></i></button>"
     contenido+="</div>";
@@ -68,8 +68,14 @@ window.abrirModal = function abrirModal(idRestaurante) {
         idRestauranteGlobal = idRestaurante;
         cargarDatos(idRestaurante);
     }
-
 }
+
+window.abrirModalComentario = function abrirModalComentario(idRestaurante ,nombre) {
+    limpiarModalComentarios();
+    idRestauranteGlobal = idRestaurante;
+    document.getElementById("lblComentarios").innerHTML = `Restaurante ${ nombre }`;
+}
+
 
 function cargarDatos(idRestaurante) {
 
@@ -101,6 +107,11 @@ function limpiarDatos() {
     document.getElementById("iframePreview").src = "";
     document.getElementById("alertaErrorCrearRestaurante").style.display = "none";
     document.getElementById("alertaErrorCrearRestaurante").innerHTML = "";
+}
+
+function limpiarModalComentarios() {
+    document.getElementById("txtCalificacion").value = "";
+    document.getElementById("txtComentario").value = "";
 }
 
 window.subirImage = function subirImage(e) {
@@ -228,7 +239,6 @@ function editar() {
 }
 
 function guardar() {
-
     //Agregar validaciones
 
     const nombre = document.getElementById("txtnombre").value;
@@ -306,5 +316,59 @@ window.eliminar = function eliminar(idRestaurante) {
         cargarRestaurantes();
     }).catch((error) => {
         alert("Ha occurido un error inesperado al eliminar el restaurante");
+    });
+}
+
+//Funcion cuando el usuario hace un comentario a un restaurante
+window.realizarComentario = function realizarComentario() {
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) =>{
+        if(user) {
+            const idRestaurante = idRestauranteGlobal; 
+            const comentario = document.getElementById("txtComentario").value;
+            const rating = document.getElementById("txtCalificacion").value;
+            const nuevoComentario = doc(collection(database, "restaurantes/"+ idRestaurante + "/comentarios"));
+            setDoc(nuevoComentario , {
+                comentario: comentario,
+                rating: rating,
+                usuario: {
+                    displayName : user.displayName,
+                    foto        : user.photoURL,
+                    uid        :  user.uid 
+                }
+            }).then(() => {
+                editarRating(idRestaurante, rating);
+            }).catch((error) =>{
+                console.log("¡OOPS! Ha ocurrido un error.");
+                console.log(error);
+            });
+        }
+    });
+}
+
+function editarRating(idRestaurante, rating) {
+
+    const docRef = doc(database, "restaurantes", idRestaurante);
+    getDoc(docRef).then(docSnap =>{
+
+        if(docSnap.exists()) {
+                const data = docSnap.data();
+                const newRating = (parseFloat(rating) + parseFloat(data.rating)) / 2;
+
+                const restauranteRef = doc(database, "restaurantes", idRestaurante);
+                updateDoc(restauranteRef , {
+                    rating: newRating
+                }).then(() =>{
+                    alert("Gracias por tu compartir con nosotros tu experiencia!");
+                    $("#commentModal").modal('hide');
+                    document.location.href = "/views/comentarios.html";
+                }).catch((error) =>{
+                        console.log("Ha ocurrido un error.");
+                        console.log(error);
+                });
+        }
+    }).catch((error) =>{
+        console.log("Ha ocurrido un error.");
+        console.log(error);
     });
 }

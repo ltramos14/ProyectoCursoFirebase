@@ -11,18 +11,18 @@ import {
   signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.js";
 
-import { 
+import {
   getFirestore,
-  doc, 
-  getDoc, 
-  setDoc 
+  doc,
+  getDoc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore.js";
 
-import { 
-  getStorage, 
-  uploadBytesResumable, 
-  getDownloadURL, 
-  ref 
+import {
+  getStorage,
+  uploadBytesResumable,
+  getDownloadURL,
+  ref
 } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-storage.js";
 
 import { verAutenticacion } from "./conexion-firebase.js";
@@ -32,8 +32,8 @@ const storage = getStorage();
 var usuarioActual;
 var fotoActualizada = null;
 
-window.onload = function() {
-    verAutenticacion();
+window.onload = function () {
+  verAutenticacion();
 }
 
 window.abrirModal = function abrirModal() {
@@ -98,26 +98,25 @@ window.registrarUsuario = function registrarUsuario() {
 };
 
 window.iniciarSesion = function iniciarSesion() {
-    const email = document.getElementById("email").value;
-    const password =  document.getElementById("password").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-    if( email == "" || password == "" ) { 
-        document.getElementById("alertErrorLogueo").style.display = "block";
-        document.getElementById("alertErrorLogueo").innerHTML = "El correo y/o la contraseña son obligatorios";
-        return false;
-    } else {
-        const auth = getAuth();
-        signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
-            // Signed in   
-            actualizarPerfil(userCredential.user, "EmailAndPassword");
-        })
-        .catch((error) => {
-            document.getElementById("alertaErrorLogeo").style.display = "block";
-            document.getElementById("alertaErrorLogeo").innerHTML = "errorMessage";
-        });
-
-        }
-    
+  if (email == "" || password == "") {
+    document.getElementById("alertErrorLogueo").style.display = "block";
+    document.getElementById("alertErrorLogueo").innerHTML = "El correo y/o la contraseña son obligatorios";
+    return false;
+  } else {
+    const auth = getAuth();
+    signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+      // Signed in   
+      actualizarPerfil(userCredential.user, "EmailAndPassword");
+      document.location.href = "/views/usuarios.html";
+    })
+      .catch((error) => {
+        document.getElementById("alertaErrorLogeo").style.display = "block";
+        document.getElementById("alertaErrorLogeo").innerHTML = "errorMessage";
+      });
+  }
 };
 
 window.authGoogle = function authGoogle() {
@@ -148,13 +147,13 @@ window.authGithub = function authGithub() {
 function authGeneric(provider, providerName) {
   const auth = getAuth();
   signInWithPopup(auth, provider)
-      .then((result) => {
-          actualizarPerfil(result.user, providerName);
-      }).catch((error) => {
-          const errorMessage = error.message;
-          document.getElementById("alertErrorLogueo").style.display = "block";
-          document.getElementById("alertErrorLogueo").innerHTML = errorMessage;
-      });
+    .then((result) => {
+      actualizarPerfil(result.user, providerName);
+    }).catch((error) => {
+      const errorMessage = error.message;
+      document.getElementById("alertErrorLogueo").style.display = "block";
+      document.getElementById("alertErrorLogueo").innerHTML = errorMessage;
+    });
 }
 
 function limpiarModalUpdate() {
@@ -175,36 +174,36 @@ function actualizarPerfil(user, providerName) {
 
   const docRef = doc(database, "usuarios", user.uid);
   getDoc(docRef).then(docSnap => {
-      if (docSnap.exists()) {
-      } else {
-          usuarioActual = user;
-          limpiarModalUpdate();
+    if (docSnap.exists()) {
+    } else {
+      usuarioActual = user;
+      limpiarModalUpdate();
 
-          document.getElementById("txtDisplayNameUpd").value = user.displayName != null ? user.displayName : "";
-          document.getElementById("txtemail").value = user.email != null ? user.email : "";
-          document.getElementById("txttelefono").value = user.phoneNumber != null ? user.phoneNumber : "";
-          document.getElementById("imgFoto").src = user.photoURL != null ? user.photoURL : "../asset/images/noprofile.png";
-          //document.getElementById("txtprovider").value = providerName;
-          document.getElementById("txtprovider").value = user.reloadUserInfo.providerUserInfo[0].providerId;
+      document.getElementById("txtDisplayNameUpd").value = user.displayName != null ? user.displayName : "";
+      document.getElementById("txtemail").value = user.email != null ? user.email : "";
+      document.getElementById("txttelefono").value = user.phoneNumber != null ? user.phoneNumber : "";
+      document.getElementById("imgFoto").src = user.photoURL != null ? user.photoURL : "../asset/images/noprofile.png";
+      //document.getElementById("txtprovider").value = providerName;
+      document.getElementById("txtprovider").value = user.reloadUserInfo.providerUserInfo[0].providerId;
 
-          if (providerName === "google") {
-              document.getElementById("txtnombre").value = user.displayName != null ? user.displayName : "";
-          } else if (providerName === "EmailAndPassword") {
-              document.getElementById("txtnombre").value = "";
-          } else if (providerName === "Twitter") {
-              document.getElementById("txtemail").removeAttribute('readonly');
-              document.getElementById("txtnombre").value = "";
-          } else if (providerName === "GitHub") {
-            document.getElementById("txtemail").removeAttribute('readonly');
-              document.getElementById("txtnombre").value = "";
-          }
-
-          $("#exampleModalUpdate").modal('show');
-
+      if (providerName === "google") {
+        document.getElementById("txtnombre").value = user.displayName != null ? user.displayName : "";
+      } else if (providerName === "EmailAndPassword") {
+        document.getElementById("txtnombre").value = "";
+      } else if (providerName === "Twitter") {
+        document.getElementById("txtemail").removeAttribute('readonly');
+        document.getElementById("txtnombre").value = "";
+      } else if (providerName === "GitHub") {
+        document.getElementById("txtemail").removeAttribute('readonly');
+        document.getElementById("txtnombre").value = "";
       }
+
+      $("#exampleModalUpdate").modal('show');
+
+    }
   }).catch((error) => {
-      document.getElementById("alertErrorLogueo").style.display = "block";
-      document.getElementById("alertErrorLogueo").innerHTML = error.message;
+    document.getElementById("alertErrorLogueo").style.display = "block";
+    document.getElementById("alertErrorLogueo").innerHTML = error.message;
   });
 }
 window.cambiarFoto = function cambiarFoto(archivo) {
@@ -213,33 +212,33 @@ window.cambiarFoto = function cambiarFoto(archivo) {
   const file = archivo.files[0];
   const reader = new FileReader();
   reader.onloadend = function () {
-      document.getElementById("progressUploadPhoto").style.visibility = "visible";
+    document.getElementById("progressUploadPhoto").style.visibility = "visible";
 
-      document.getElementById("imgFoto").src = reader.result;
-      const imageRef = ref(storage, 'fotoPerfil/' + usuarioActual.uid);
-      const uploadTask = uploadBytesResumable(imageRef, file);
-      uploadTask.on('state_changed',
-          (snapshot) => {
-              
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              $('.progress-bar').css('width', progress + '%').attr('aria-valuenow', progress);
-          },
-          (error) => {
-              document.getElementById("buttonEditPerfil").disabled = false;
-              document.getElementById("progressUploadPhoto").style.visibility = "hidden";
-              $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
-              document.getElementById("alertaActulizacionRegistro").style.display = "block";
-              document.getElementById("alertaActulizacionRegistro").innerHTML = error.message;
-          },
-          () => {
-              document.getElementById("buttonEditPerfil").disabled = false;
-              document.getElementById("progressUploadPhoto").style.visibility = "hidden";
-              $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
-              getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                  fotoActualizada = downloadURL;
-              });
-          }
-      );
+    document.getElementById("imgFoto").src = reader.result;
+    const imageRef = ref(storage, 'fotoPerfil/' + usuarioActual.uid);
+    const uploadTask = uploadBytesResumable(imageRef, file);
+    uploadTask.on('state_changed',
+      (snapshot) => {
+
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        $('.progress-bar').css('width', progress + '%').attr('aria-valuenow', progress);
+      },
+      (error) => {
+        document.getElementById("buttonEditPerfil").disabled = false;
+        document.getElementById("progressUploadPhoto").style.visibility = "hidden";
+        $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
+        document.getElementById("alertaActulizacionRegistro").style.display = "block";
+        document.getElementById("alertaActulizacionRegistro").innerHTML = error.message;
+      },
+      () => {
+        document.getElementById("buttonEditPerfil").disabled = false;
+        document.getElementById("progressUploadPhoto").style.visibility = "hidden";
+        $('.progress-bar').css('width', '0%').attr('aria-valuenow', 0);
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          fotoActualizada = downloadURL;
+        });
+      }
+    );
 
   }
   reader.readAsDataURL(file);
@@ -287,40 +286,40 @@ window.editarPerfil = function editarPerfil() {
     return;
   }
 
-  if(fotoActualizada != null)
+  if (fotoActualizada != null)
     imgFoto = fotoActualizada;
 
 
   setDoc(doc(database, "usuarios", usuarioActual.uid), {
-          nombre: nombre,
-          apellido: apellido,
-          email: email,
-          displayName: displayName,
-          telefono: telefono,
-          provedor: provedor,
-          imgFoto: imgFoto,
+    nombre: nombre,
+    apellido: apellido,
+    email: email,
+    displayName: displayName,
+    telefono: telefono,
+    provedor: provedor,
+    imgFoto: imgFoto,
   }).then(() => {
-      editarAutorizacion(displayName, imgFoto);
-  }).catch((error) =>{
-      document.getElementById("alertaActulizacionRegistro").style.display = "block";
-      document.getElementById("alertaActulizacionRegistro").innerHTML = error.message;
+    editarAutorizacion(displayName, imgFoto);
+  }).catch((error) => {
+    document.getElementById("alertaActulizacionRegistro").style.display = "block";
+    document.getElementById("alertaActulizacionRegistro").innerHTML = error.message;
   });
 
 }
 
 function editarAutorizacion(displayName, photoURL) {
 
-  const auth =  getAuth();
+  const auth = getAuth();
   updateProfile(auth.currentUser, {
-      displayName: displayName,
-      photoURL: photoURL
+    displayName: displayName,
+    photoURL: photoURL
   }).then(() => {
-      alert("Usuario editado correctamente");
-      document.location.href = "/views/usuarios.html";
+    alert("Usuario editado correctamente");
+    document.location.href = "/views/usuarios.html";
   }).catch((error) => {
-      const errorMessage = error.message;
-      document.getElementById("alertaActulizacionRegistro").style.display = "block";
-      document.getElementById("alertaActulizacionRegistro").innerHTML = errorMessage;
+    const errorMessage = error.message;
+    document.getElementById("alertaActulizacionRegistro").style.display = "block";
+    document.getElementById("alertaActulizacionRegistro").innerHTML = errorMessage;
   });
 }
 

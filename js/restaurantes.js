@@ -34,6 +34,7 @@ async function cargarRestaurantes() {
     contenido+="<button type='button'  class='btn btn-info' data-toggle='modal' data-target='#commentModal' onclick='abrirModalComentario(\""+rpta.id+"\",\""+fila.nombre+"\")'><i class='fa fa-comments'></i> Calificar/Comentar</button>"
     contenido+="</div>"
     contenido+="<hr>";
+    contenido+="<a href='../views/comentarios.html'><i class='fa fa-comment'></i>Leer comentarios</a>"
     contenido+="<div style='text-align:end;'>";
     contenido+="<button type='button'  class='btn btn-success' onclick='abrirModal(\""+rpta.id+"\")' data-toggle='modal' data-target='#exampleModal'><i class='fa fa-edit'></i></button>"
     contenido+="<button type='button'  class='btn btn-danger'  onclick='eliminar(\""+rpta.id+"\")' ><i class='fa fa-trash'></i></button>"

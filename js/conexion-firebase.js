@@ -46,7 +46,7 @@ export function verAutenticacion() {
         document.getElementById("divRedes").style.visibility = "hidden";
       }
       document.getElementById("divDatosUsuario").style.visibility = "visible";
-      
+
       if (user.photoURL != null)
         document.getElementById("imgFotoUsuario").src = user.photoURL;
       else
